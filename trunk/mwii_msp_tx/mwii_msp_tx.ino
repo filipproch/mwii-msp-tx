@@ -4,7 +4,7 @@
 #define ROLLP A0  //644 512  371
 #define PITCHP A1  // 643 512 376
 #define THP A2 ///373 512 650
-#define YAWP A3 // 647 512 370        370  512  650 t12
+#define YAWP A3 // 647 512 370        370  512  650 t123
 
 #define RC_REFRESH_RATE 1000/50 //v Hz
 #define LED_REFRESH_RATE 1000/1  //v Hz
