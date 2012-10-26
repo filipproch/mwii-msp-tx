@@ -6,7 +6,7 @@
 #define THP A2 ///373 512 650
 #define YAWP A3 // 647 512 370        370  512  650 t123
 
-#define RC_REFRESH_RATE 1000/50 //v Hz
+#define RC_REFRESH_RATE 1000/20 //v Hz
 #define LED_REFRESH_RATE 1000/1  //v Hz
 #define LED_ON_OK 9
 #define BUZERPIN 6
