@@ -1,3 +1,4 @@
+//NOT CURRENTLY USED////
 void stickcal(){
   uint32_t caltime=millis();
   uint16_t calv=0;
