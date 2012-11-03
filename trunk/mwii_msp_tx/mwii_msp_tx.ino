@@ -10,6 +10,7 @@ MWII-MSP-TX by Andrej Javorsek
 #include <avr/pgmspace.h>
 
 #define MSP_SET_RAW_RC 200
+#define MSP_ALTITUDE  109
 #define ROLLP A0  //644 512  371
 #define PITCHP A1  // 643 512 376
 #define THP A2 ///373 512 650
@@ -57,6 +58,7 @@ void loop() {
 
   CONNECTION_OK=1;
   if((GUT-T_LED)>LED_REFRESH_RATE){
+    //getstatus();
     if (CONNECTION_OK){
       STANJE=1;
     }
@@ -67,31 +69,32 @@ void loop() {
     digitalWrite(LED_ON_OK,STANJE);
   }
 
-  ROLL=(uint16_t) (((double)(ANLOGMINMAX[0][1] - analogRead(ROLLP)) / (ANLOGMINMAX[0][1]-ANLOGMINMAX[0][0]) ) * 1050.0) + 1000;
-  PITCH=(uint16_t) (((double)(ANLOGMINMAX[1][1] - analogRead(PITCHP)) / (ANLOGMINMAX[1][1]-ANLOGMINMAX[1][0]) ) * 1050.0) + 1000;
-  TH=(uint16_t) (((double)(ANLOGMINMAX[2][1] - analogRead(THP)) / (ANLOGMINMAX[2][1]-ANLOGMINMAX[2][0]) ) * 1050.0) + 1000;
-  YAW=(uint16_t) (((double)(ANLOGMINMAX[3][1] - analogRead(YAWP)) / (ANLOGMINMAX[3][1]-ANLOGMINMAX[3][0]) ) * 1050.0) + 1000;
+  if((GUT-T)>RC_REFRESH_RATE){    //moved all anolog/digital reading/calculating inside 20Hz loop
 
-  for (int i=0;i<4;i++){
-    AUX[i]=digitalRead(AUXP[i])*1000+1000;
-  }
+    ROLL=(uint16_t) (((double)(ANLOGMINMAX[0][1] - analogRead(ROLLP)) / (ANLOGMINMAX[0][1]-ANLOGMINMAX[0][0]) ) * 1050.0) + 1000;
+    PITCH=(uint16_t) (((double)(ANLOGMINMAX[1][1] - analogRead(PITCHP)) / (ANLOGMINMAX[1][1]-ANLOGMINMAX[1][0]) ) * 1050.0) + 1000;
+    TH=(uint16_t) (((double)(ANLOGMINMAX[2][1] - analogRead(THP)) / (ANLOGMINMAX[2][1]-ANLOGMINMAX[2][0]) ) * 1050.0) + 1000;
+    YAW=(uint16_t) (((double)(ANLOGMINMAX[3][1] - analogRead(YAWP)) / (ANLOGMINMAX[3][1]-ANLOGMINMAX[3][0]) ) * 1050.0) + 1000;
 
-  SIGN[0]=ROLL;
-  SIGN[1]=PITCH;
-  SIGN[2]=YAW;
-  SIGN[3]=TH;
+    for (int i=0;i<4;i++){
+      AUX[i]=digitalRead(AUXP[i])*1000+1000;
+    }
 
-  for(int i=4;i<8;i++){
-    SIGN[i]=AUX[i-4];
-  }
+    SIGN[0]=ROLL;
+    SIGN[1]=PITCH;
+    SIGN[2]=YAW;
+    SIGN[3]=TH;
 
-  if((GUT-T)>RC_REFRESH_RATE){
+    for(int i=4;i<8;i++){
+      SIGN[i]=AUX[i-4];
+    }
+
     msp_babel(SIGN);
-    //getstatus();
     T=GUT;
   }
   GUT=millis();
 }
+
 
 
 
