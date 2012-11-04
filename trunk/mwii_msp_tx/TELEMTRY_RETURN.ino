@@ -4,20 +4,6 @@ void getstatus(){
   uint8_t i=0;
   char properResp[]={
     '$','M','>'      };
-  ////////////////////////////////  
-  char checksum=0;
-    
-  msp_alt_string[0]=sizeof(tabela) & 0xff;
-  checksum ^= (sizeof(tabela) & 0xFF);
-
-  msp_alt_string[1]=MMSP_ALTITUDE & 0xff;
-  checksum ^= (MSP_ALTITUDE & 0xFF);
-  
-    Serial.print("$M<"); 
-  for(int u=0;u<19;u++){
-    Serial.write(msp_alt_string[u]);
-  }
-  ////////////////////////////////////
 
   CONNECTION_OK=0;
   if (Serial.available()) {

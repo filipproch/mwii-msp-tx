@@ -8,6 +8,7 @@ MWII-MSP-TX by Andrej Javorsek
  */
 
 #include <avr/pgmspace.h>
+#include "tones.h"
 
 #define MSP_SET_RAW_RC 200
 #define MSP_ALTITUDE  109
@@ -23,10 +24,12 @@ MWII-MSP-TX by Andrej Javorsek
 
 uint8_t AUXP[]={
   13,12,11,5};
-uint32_t GUT=0 ,T=0, T_LED=0; 
+uint8_t SIG=0;
+uint32_t GUT=0 ,T=0, T_LED=0, TG_SW=0; 
 uint16_t ROLL=1500, PITCH=1500, TH=1000, YAW=1500;
 uint16_t AUX[4]={
   1000,1000,1000,1000};
+uint16_t AUXOLD[4];
 uint16_t SIGN[8]={
   0,0,0,0};
 uint8_t CONNECTION_OK=0;
@@ -34,6 +37,7 @@ uint8_t STANJE=0;
 uint8_t ANLOGPINS[]={
   1,2,3,4};
 uint16_t ANLOGMINMAX[4][2];
+ uint16_t PN=0;
 
 
 void setup() {
@@ -47,11 +51,15 @@ void setup() {
   for (int i=0;i<4;i++){
     pinMode(AUXP[i],INPUT);
     digitalWrite(AUXP[i],HIGH);
-    analogWrite(BUZERPIN,150);
-    delay(50);
-    analogWrite(BUZERPIN,0);
   }
-  pinMode(LED_ON_OK,OUTPUT);
+
+  tone(BUZERPIN,NOTE_B5);
+  delay(50);
+  tone(BUZERPIN,NOTE_B6);
+  delay(50);
+  tone(BUZERPIN,NOTE_B7);
+  delay(100);
+  noTone(BUZERPIN);
 }
 
 void loop() { 
@@ -60,13 +68,12 @@ void loop() {
   if((GUT-T_LED)>LED_REFRESH_RATE){
     //getstatus();
     if (CONNECTION_OK){
-      STANJE=1;
+      analogWrite(LED_ON_OK,40);
     }
     else{
-      STANJE=!STANJE;
+      analogWrite(LED_ON_OK,0);
     }
     T_LED=GUT;
-    digitalWrite(LED_ON_OK,STANJE);
   }
 
   if((GUT-T)>RC_REFRESH_RATE){    //moved all anolog/digital reading/calculating inside 20Hz loop
@@ -78,6 +85,18 @@ void loop() {
 
     for (int i=0;i<4;i++){
       AUX[i]=digitalRead(AUXP[i])*1000+1000;
+      
+      if (AUX[i]!=AUXOLD[i] && AUX[i]>AUXOLD[i]){
+        TG_SW=GUT;
+        AUXOLD[i]=AUX[i];
+        SIG=1;
+      }
+      if (AUX[i]!=AUXOLD[i] && AUX[i]<AUXOLD[i]){
+        TG_SW=GUT;
+        AUXOLD[i]=AUX[i];
+        SIG=2;
+      }
+      
     }
 
     SIGN[0]=ROLL;
@@ -92,8 +111,12 @@ void loop() {
     msp_babel(SIGN);
     T=GUT;
   }
+
+  singndance(SIG);
+
   GUT=millis();
 }
+
 
 
 
