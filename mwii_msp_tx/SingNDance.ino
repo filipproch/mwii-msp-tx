@@ -1,5 +1,3 @@
-//NOT CURRENTLY USED////
-
 void singndance(uint8_t pip){
  
   switch (pip){

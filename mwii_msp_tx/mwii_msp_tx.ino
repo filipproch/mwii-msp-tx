@@ -68,7 +68,7 @@ void loop() {
   if((GUT-T_LED)>LED_REFRESH_RATE){
     //getstatus();
     if (CONNECTION_OK){
-      analogWrite(LED_ON_OK,40);
+      analogWrite(LED_ON_OK,10);
     }
     else{
       analogWrite(LED_ON_OK,0);
