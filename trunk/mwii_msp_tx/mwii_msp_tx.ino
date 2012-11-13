@@ -17,10 +17,26 @@ MWII-MSP-TX by Andrej Javorsek
 #define THP A2 ///373 512 650
 #define YAWP A3 // 647 512 370        370  512  650 t123
 
-#define RC_REFRESH_RATE 1000/20 //v Hz
 #define LED_REFRESH_RATE 1000/2  //v Hz
 #define LED_ON_OK 9
 #define BUZERPIN 6
+#define ANALOGMAX 626
+#define ANALOGMIN 397
+#define ANALOGMMD (ANALOGMAX-ANALOGMIN)
+//#define DEBUG
+
+#if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)   ///debugging and printing option
+  #define MEGA
+  #define RC_REFRESH_RATE 1000/1 //v Hz
+#endif
+
+#if !defined(MEGA) || !defined (DEBUG)
+  #define  RC_REFRESH_RATE 1000/20 //v Hz
+#endif
+
+#if defined(DEBUG)
+   #define RC_REFRESH_RATE 1000/1 //v Hz
+#endif
 
 uint8_t AUXP[]={
   13,12,11,5};
@@ -36,18 +52,16 @@ uint8_t CONNECTION_OK=0;
 uint8_t STANJE=0;
 uint8_t ANLOGPINS[]={
   1,2,3,4};
-uint16_t ANLOGMINMAX[4][2];
- uint16_t PN=0;
+uint16_t PN=0;
 
 
 void setup() {
   Serial.begin(9600);
-  for (int m=0;m<4;m++){
-    ANLOGMINMAX[m][0]=384;
-    ANLOGMINMAX[m][1]=640;
-  }
 
-  //stickcal();
+#if defined(MEGA)
+    Serial1.begin(9600);
+#endif
+
   for (int i=0;i<4;i++){
     pinMode(AUXP[i],INPUT);
     digitalWrite(AUXP[i],HIGH);
@@ -64,9 +78,11 @@ void setup() {
 
 void loop() { 
 
-  CONNECTION_OK=1;
+
   if((GUT-T_LED)>LED_REFRESH_RATE){
     //getstatus();
+    CONNECTION_OK=1; //fake proper MWII return from prev. comented function
+
     if (CONNECTION_OK){
       analogWrite(LED_ON_OK,10);
     }
@@ -77,15 +93,20 @@ void loop() {
   }
 
   if((GUT-T)>RC_REFRESH_RATE){    //moved all anolog/digital reading/calculating inside 20Hz loop
+  
+  ROLL=constrain(analogRead(ROLLP),ANALOGMIN,ANALOGMAX);
+  PITCH=constrain(analogRead(PITCHP),ANALOGMIN,ANALOGMAX);
+  TH=constrain(analogRead(THP),ANALOGMIN,ANALOGMAX);
+  YAW=constrain(analogRead(YAWP),ANALOGMIN,ANALOGMAX);
 
-    ROLL=(uint16_t) (((double)(ANLOGMINMAX[0][1] - analogRead(ROLLP)) / (ANLOGMINMAX[0][1]-ANLOGMINMAX[0][0]) ) * 1050.0) + 1000;
-    PITCH=(uint16_t) (((double)(ANLOGMINMAX[1][1] - analogRead(PITCHP)) / (ANLOGMINMAX[1][1]-ANLOGMINMAX[1][0]) ) * 1050.0) + 1000;
-    TH=(uint16_t) (((double)(ANLOGMINMAX[2][1] - analogRead(THP)) / (ANLOGMINMAX[2][1]-ANLOGMINMAX[2][0]) ) * 1050.0) + 1000;
-    YAW=(uint16_t) (((double)(ANLOGMINMAX[3][1] - analogRead(YAWP)) / (ANLOGMINMAX[3][1]-ANLOGMINMAX[3][0]) ) * 1050.0) + 1000;
+    ROLL=(uint16_t) (((double)(ANALOGMAX - ROLL + 1) / (ANALOGMMD) ) * 1000.0) + 1000;
+    PITCH=(uint16_t) (((double)(ANALOGMAX - PITCH + 1) / (ANALOGMMD) ) * 1000.0) + 1000;
+    TH=(uint16_t) (((double)(ANALOGMAX - TH + 1) / (ANALOGMMD) ) * 1000.0) + 1000;
+    YAW=(uint16_t) (((double)(ANALOGMAX - YAW + 1) / (ANALOGMMD) ) * 1000.0) + 1000;
 
     for (int i=0;i<4;i++){
       AUX[i]=digitalRead(AUXP[i])*1000+1000;
-      
+
       if (AUX[i]!=AUXOLD[i] && AUX[i]>AUXOLD[i]){
         TG_SW=GUT;
         AUXOLD[i]=AUX[i];
@@ -96,7 +117,7 @@ void loop() {
         AUXOLD[i]=AUX[i];
         SIG=2;
       }
-      
+
     }
 
     SIGN[0]=ROLL;
@@ -107,17 +128,34 @@ void loop() {
     for(int i=4;i<8;i++){
       SIGN[i]=AUX[i-4];
     }
-
-    msp_babel(SIGN);
+    #if !defined(DEBUG)
+      msp_babel(SIGN);
+    #endif
+    
+    #if defined(DEBUG)
+      Serial.println(analogRead(ROLLP),DEC);
+      Serial.println(analogRead(YAWP),DEC);
+      Serial.println(" ");
+    #endif
+    
     T=GUT;
-  }
+  }  
 
   singndance(SIG);
 
+#if defined(MEGA)
+  if (Serial1.available()) {
+    int inByte = Serial1.read();
+    Serial.write(inByte); 
+  }
+
+  if (Serial.available()) {
+    int inByte = Serial.read();
+    Serial1.write(inByte); 
+  }
+
+#endif
+
   GUT=millis();
 }
-
-
-
-
 

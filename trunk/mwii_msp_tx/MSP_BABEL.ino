@@ -3,9 +3,8 @@ void msp_babel(uint16_t rx_chs[8]){
   char tabela[16];
   char checksum=0;
 
-  //int msp_babel(int yaw, int th, int roll, int pitch, int aux1, int aux2, int aux3){
   /*
-    msp_rx_string[]=velikost_payloada, MSP_SET_RAW_RC, payload[],checksumm
+    msp_rx_string[]=payload_size, MSP_SET_RAW_RC, payload[],checksumm
    */
   uint8_t msb_pl=0;
   uint8_t lsb_pl=1;
@@ -30,10 +29,18 @@ void msp_babel(uint16_t rx_chs[8]){
   }
 
   msp_rx_string[18]= checksum;
-
+  
+#if !defined(MEGA)
   Serial.print("$M<"); 
   for(int u=0;u<19;u++){
     Serial.write(msp_rx_string[u]);
   }
-}
+#endif
 
+#if defined(MEGA)
+  Serial1.print("$M<"); 
+  for(int u=0;u<19;u++){
+    Serial1.write(msp_rx_string[u]);
+  }
+#endif
+}
