@@ -1,27 +1,59 @@
-//NOT CURRENTLY USED////
+//curently checks for RAW_RC return code 
 void getstatus(){
-  char inByte[4];
+  int inByte[6];
   uint8_t i=0;
-  char properResp[]={
-    '$','M','>'      };
+  int properResp[]={
+    36,77,62,0,200,200  };
 
   CONNECTION_OK=0;
+  i=0;
+
+#if defined(MEGA)
+  if (Serial1.available()) {
+    while (Serial1.available()) {
+      inByte[i] = Serial1.read();
+      if (i<6){ //read only 6 ints
+        i++;
+      }
+      else{
+        i=6;
+      }
+    } 
+  }
+#endif
+
+#if !defined(MEGA)
   if (Serial.available()) {
     while (Serial.available()) {
-      if (i<3){   //read first 3 char
-      i++;
-      }
-      else{ //truncate the rest
-        i=3;
-      }
       inByte[i] = Serial.read();
-    }
-    CONNECTION_OK=1;
+      if (i<6){ //read only 6 ints
+        i++;
+      }
+      else{
+        i=6;
+      }
+    } 
   }
-  //if (inByte[0]==properResp[0] && inByte[1]==properResp[1] && inByte[2]==properResp[2]){
-    //CONNECTION_OK=1;
-  //}
+#endif
+
+if (inByte[0]==properResp[0] && inByte[2]==properResp[2]){
+   CONNECTION_OK=1;
 }
+
+/*for (int u=0;u<3;u++){
+  if (inByte[u]==properResp[u]){
+    CONNECTION_OK &= CONNECTION_OK;
+  }
+  else{
+    CONNECTION_OK=0;
+  }
+}*/
+
+}
+
+
+
+
 
 
 
