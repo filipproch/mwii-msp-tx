@@ -78,7 +78,7 @@ void setup() {
 
 void loop() { 
   //static uint8_t taskOrder=0; //to call different serial stuff less often
-  CONNECTION_OK=1;  ///faked connection check
+  CONNECTION_OK=1;  ///faked connection check since real check does not work over APC220?!!?
 
   if((GUT-T_LED)>LED_REFRESH_RATE){
     if (CONNECTION_OK){
@@ -127,7 +127,6 @@ void loop() {
     }
     msp_babel(MSP_SET_RAW_RC, 8,SIGN);
     //after sending RC command check for any/proper response
-    //delay(3);
     //getstatus();
 
     /*#if defined(DEBUG) || defined(MEGA)
