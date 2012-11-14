@@ -26,16 +26,16 @@ MWII-MSP-TX by Andrej Javorsek
 //#define DEBUG
 
 #if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)   ///debugging and printing option
-  #define MEGA
-  #define RC_REFRESH_RATE 1000/1 //v Hz
+#define MEGA
+#define RC_REFRESH_RATE 1000/5 //v Hz
 #endif
 
-#if !defined(MEGA) || !defined (DEBUG)
-  #define  RC_REFRESH_RATE 1000/20 //v Hz
+#if !defined(MEGA) && !defined (DEBUG)
+#define  RC_REFRESH_RATE 1000/20 //v Hz
 #endif
 
 #if defined(DEBUG)
-   #define RC_REFRESH_RATE 1000/1 //v Hz
+#define RC_REFRESH_RATE 1000/1 //v Hz
 #endif
 
 uint8_t AUXP[]={
@@ -59,7 +59,7 @@ void setup() {
   Serial.begin(9600);
 
 #if defined(MEGA)
-    Serial1.begin(9600);
+  Serial1.begin(9600);
 #endif
 
   for (int i=0;i<4;i++){
@@ -77,12 +77,10 @@ void setup() {
 }
 
 void loop() { 
-
+  //static uint8_t taskOrder=0; //to call different serial stuff less often
+  CONNECTION_OK=1;  ///faked connection check
 
   if((GUT-T_LED)>LED_REFRESH_RATE){
-    //getstatus();
-    CONNECTION_OK=1; //fake proper MWII return from prev. comented function
-
     if (CONNECTION_OK){
       analogWrite(LED_ON_OK,10);
     }
@@ -93,11 +91,11 @@ void loop() {
   }
 
   if((GUT-T)>RC_REFRESH_RATE){    //moved all anolog/digital reading/calculating inside 20Hz loop
-  
-  ROLL=constrain(analogRead(ROLLP),ANALOGMIN,ANALOGMAX);
-  PITCH=constrain(analogRead(PITCHP),ANALOGMIN,ANALOGMAX);
-  TH=constrain(analogRead(THP),ANALOGMIN,ANALOGMAX);
-  YAW=constrain(analogRead(YAWP),ANALOGMIN,ANALOGMAX);
+
+    ROLL=constrain(analogRead(ROLLP),ANALOGMIN,ANALOGMAX);
+    PITCH=constrain(analogRead(PITCHP),ANALOGMIN,ANALOGMAX);
+    TH=constrain(analogRead(THP),ANALOGMIN,ANALOGMAX);
+    YAW=constrain(analogRead(YAWP),ANALOGMIN,ANALOGMAX);
 
     ROLL=(uint16_t) (((double)(ANALOGMAX - ROLL + 1) / (ANALOGMMD) ) * 1000.0) + 1000;
     PITCH=(uint16_t) (((double)(ANALOGMAX - PITCH + 1) / (ANALOGMMD) ) * 1000.0) + 1000;
@@ -117,7 +115,6 @@ void loop() {
         AUXOLD[i]=AUX[i];
         SIG=2;
       }
-
     }
 
     SIGN[0]=ROLL;
@@ -128,34 +125,32 @@ void loop() {
     for(int i=4;i<8;i++){
       SIGN[i]=AUX[i-4];
     }
-    #if !defined(DEBUG)
-      msp_babel(SIGN);
-    #endif
-    
-    #if defined(DEBUG)
-      Serial.println(analogRead(ROLLP),DEC);
-      Serial.println(analogRead(YAWP),DEC);
-      Serial.println(" ");
-    #endif
-    
+    msp_babel(MSP_SET_RAW_RC, 8,SIGN);
+    //after sending RC command check for any/proper response
+    //delay(3);
+    //getstatus();
+
+    /*#if defined(DEBUG) || defined(MEGA)
+     Serial.println(CONNECTION_OK,DEC);
+     #endif*/
+
+    /* switch (taskOrder % 2){
+     case 0:
+     taskOrder++;
+     msp_babel(MSP_ALTITUDE, 0,0);
+     break;
+     }  */
+
     T=GUT;
   }  
 
   singndance(SIG);
 
-#if defined(MEGA)
-  if (Serial1.available()) {
-    int inByte = Serial1.read();
-    Serial.write(inByte); 
-  }
-
-  if (Serial.available()) {
-    int inByte = Serial.read();
-    Serial1.write(inByte); 
-  }
-
-#endif
-
   GUT=millis();
 }
+
+
+
+
+
 
