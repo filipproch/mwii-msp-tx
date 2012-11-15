@@ -5,7 +5,7 @@ void getstatus(){
   int properResp[]={
     36,77,62,0,200,200  };
 
-  CONNECTION_OK=0;
+  CONNECTION_OK=CONNECTION_OK+1;
   i=0;
 
 #if defined(MEGA)
@@ -37,7 +37,7 @@ void getstatus(){
 #endif
 
 if (inByte[0]==properResp[0] && inByte[2]==properResp[2]){
-   CONNECTION_OK=1;
+   CONNECTION_OK=0;
 }
 
 /*for (int u=0;u<3;u++){

@@ -27,6 +27,13 @@ void singndance(uint8_t pip){
     }
     break;
     
+    case 3:
+    PN=NOTE_F1;
+    if ((GUT-TG_SW) > 50){
+      PN=0;
+    }
+    break;
+    
   default:
     PN=0;
     break;

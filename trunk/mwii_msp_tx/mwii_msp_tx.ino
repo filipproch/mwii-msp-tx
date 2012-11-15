@@ -23,36 +23,35 @@ MWII-MSP-TX by Andrej Javorsek
 #define ANALOGMAX 626
 #define ANALOGMIN 397
 #define ANALOGMMD (ANALOGMAX-ANALOGMIN)
+
 //#define DEBUG
+
+uint16_t MIDR=512, MIDP=512, MIDY=512; 
+
+uint16_t DB=1500;
 
 #if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)   ///debugging and printing option
 #define MEGA
-#define RC_REFRESH_RATE 1000/5 //v Hz
 #endif
 
-#if !defined(MEGA) && !defined (DEBUG)
-#define  RC_REFRESH_RATE 1000/20 //v Hz
-#endif
-
-#if defined(DEBUG)
-#define RC_REFRESH_RATE 1000/1 //v Hz
-#endif
 
 uint8_t AUXP[]={
   13,12,11,5};
 uint8_t SIG=0;
-uint32_t GUT=0 ,T=0, T_LED=0, TG_SW=0; 
-uint16_t ROLL=1500, PITCH=1500, TH=1000, YAW=1500;
+uint32_t GUT=0 ,T=0, T_LED=0, TG_SW=0, ADP_DELAY=0; 
+uint16_t ROLL=512, PITCH=512, TH=512, YAW=512;
 uint16_t AUX[4]={
   1000,1000,1000,1000};
 uint16_t AUXOLD[4];
 uint16_t SIGN[8]={
   0,0,0,0};
-uint8_t CONNECTION_OK=0;
+uint16_t CONNECTION_OK=0;
 uint8_t STANJE=0;
 uint8_t ANLOGPINS[]={
   1,2,3,4};
 uint16_t PN=0;
+uint8_t  RC_REFRESH_RATE=(1000/20);
+uint8_t SLOW_RATE=0;
 
 
 void setup() {
@@ -66,6 +65,10 @@ void setup() {
     pinMode(AUXP[i],INPUT);
     digitalWrite(AUXP[i],HIGH);
   }
+  
+  MIDR=constrain(analogRead(ROLLP),ANALOGMIN,ANALOGMAX);  //find currently trimmed midpoints for adaptive TX frequency
+  MIDP=constrain(analogRead(PITCHP),ANALOGMIN,ANALOGMAX);
+  MIDY=constrain(analogRead(YAWP),ANALOGMIN,ANALOGMAX);
 
   tone(BUZERPIN,NOTE_B5);
   delay(50);
@@ -76,26 +79,55 @@ void setup() {
   noTone(BUZERPIN);
 }
 
-void loop() { 
+void loop() {
+ 
+  ROLL=constrain(analogRead(ROLLP),ANALOGMIN,ANALOGMAX);
+  PITCH=constrain(analogRead(PITCHP),ANALOGMIN,ANALOGMAX);
+  TH=constrain(analogRead(THP),ANALOGMIN,ANALOGMAX);
+  YAW=constrain(analogRead(YAWP),ANALOGMIN,ANALOGMAX);
+
+uint16_t RDIFF=(uint16_t) (pow((MIDR-ROLL),2));
+uint16_t PDIFF=(uint16_t) (pow((MIDP-PITCH),2));
+uint16_t YDIFF=(uint16_t) (pow((MIDY-YAW),2));
+
+  if (RDIFF>DB || PDIFF>DB || YDIFF>DB*2){
+    ADP_DELAY=GUT;
+  }
+
+  if (GUT>8000 && (GUT-ADP_DELAY)<8000){
+    RC_REFRESH_RATE=(1000/20);
+    SLOW_RATE=0;
+  }
+  else{
+    RC_REFRESH_RATE=(1000/10);
+    SLOW_RATE=1;
+  }
+
+
   //static uint8_t taskOrder=0; //to call different serial stuff less often
-  CONNECTION_OK=1;  ///faked connection check since real check does not work over APC220?!!?
+  if (SLOW_RATE !=1 ){
+    CONNECTION_OK=0;
+    //SIG=3;
+    //TG_SW=GUT;
+    analogWrite(LED_ON_OK,255);
+  }
 
   if((GUT-T_LED)>LED_REFRESH_RATE){
-    if (CONNECTION_OK){
+    if (CONNECTION_OK<5){
       analogWrite(LED_ON_OK,10);
     }
     else{
       analogWrite(LED_ON_OK,0);
+      
     }
     T_LED=GUT;
   }
 
-  if((GUT-T)>RC_REFRESH_RATE){    //moved all anolog/digital reading/calculating inside 20Hz loop
+#if defined(DEBUG)
+RC_REFRESH_RATE=(1000/1);
+#endif
 
-    ROLL=constrain(analogRead(ROLLP),ANALOGMIN,ANALOGMAX);
-    PITCH=constrain(analogRead(PITCHP),ANALOGMIN,ANALOGMAX);
-    TH=constrain(analogRead(THP),ANALOGMIN,ANALOGMAX);
-    YAW=constrain(analogRead(YAWP),ANALOGMIN,ANALOGMAX);
+  if((GUT-T)>RC_REFRESH_RATE){
 
     ROLL=(uint16_t) (((double)(ANALOGMAX - ROLL + 1) / (ANALOGMMD) ) * 1000.0) + 1000;
     PITCH=(uint16_t) (((double)(ANALOGMAX - PITCH + 1) / (ANALOGMMD) ) * 1000.0) + 1000;
@@ -125,13 +157,20 @@ void loop() {
     for(int i=4;i<8;i++){
       SIGN[i]=AUX[i-4];
     }
+    
     msp_babel(MSP_SET_RAW_RC, 8,SIGN);
-    //after sending RC command check for any/proper response
-    //getstatus();
+    
+    //after sending RC command check for any/proper response if in slow rate
+    if (SLOW_RATE){
+      getstatus();
+    }
 
-    /*#if defined(DEBUG) || defined(MEGA)
-     Serial.println(CONNECTION_OK,DEC);
-     #endif*/
+    #if defined(DEBUG) || defined(MEGA)
+     Serial.println(MIDR,DEC);
+     Serial.println(RDIFF,DEC);
+     Serial.println(ROLL,DEC);
+     Serial.println(" ");
+     #endif
 
     /* switch (taskOrder % 2){
      case 0:
@@ -147,6 +186,7 @@ void loop() {
 
   GUT=millis();
 }
+
 
 
 
