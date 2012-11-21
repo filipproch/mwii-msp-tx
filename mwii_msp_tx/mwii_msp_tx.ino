@@ -17,11 +17,11 @@ MWII-MSP-TX by Andrej Javorsek
 #define MSP_IDENT                100
 #define MSP_BAT                  110
 
-#define ROLLP A0  //644 512  371
-#define PITCHP A1  // 643 512 376
-#define THP A2 ///373 512 650
-#define YAWP A3 // 647 512 370        370  512  650 t123
-#define LED_REFRESH_RATE 1000/2  //v Hz
+#define ROLLP A0
+#define PITCHP A1
+#define THP A2
+#define YAWP A3
+#define LED_REFRESH_RATE 1000/2  //in Hz
 #define LED_ON_OK 9
 #define BUZERPIN 6
 #define BUZERPIN_VARIO 7
@@ -51,7 +51,9 @@ uint8_t STANJE=0;
 uint8_t ANLOGPINS[]={
   1,2,3,4};
 uint16_t PN=0;
-uint8_t  RC_REFRESH_RATE=(1000/25);
+uint8_t  RC_FAST_REFRESH_RATE=(1000/40); //in Hz
+uint8_t  RC_SLOW_REFRESH_RATE=(1000/18); //in Hz
+uint8_t RC_REFRESH_RATE = RC_FAST_REFRESH_RATE;
 uint8_t SLOW_RATE=0;
 uint8_t taskOrder=0; //to call different serial stuff less often
 
@@ -102,18 +104,18 @@ void loop() {
 
   uint16_t RDIFF=(uint16_t) (pow((MIDR-ROLL),2));
   uint16_t PDIFF=(uint16_t) (pow((MIDP-PITCH),2));
-  uint16_t YDIFF=(uint16_t) (pow((MIDY-YAW),2));
+  //uint16_t YDIFF=(uint16_t) (pow((MIDY-YAW),2));
 
   if (RDIFF>DB || PDIFF>DB ){
     ADP_DELAY=GUT;
   }
 
   if (GUT>3000 && (GUT-ADP_DELAY)<3000){
-    RC_REFRESH_RATE=(1000/30);
+    RC_REFRESH_RATE=RC_FAST_REFRESH_RATE;
     SLOW_RATE=0;
   }
   else{
-    RC_REFRESH_RATE=(1000/12);
+    RC_REFRESH_RATE=RC_SLOW_REFRESH_RATE;
     SLOW_RATE=1;
   }
 
@@ -172,21 +174,19 @@ void loop() {
       msp_babel(MSP_SET_RAW_RC, 8,SIGN);
     }
 
-    //after sending RC command check for any/proper response if in slow rate
     if (SLOW_RATE){
       switch (taskOrder % 11){
       case 0:
         taskOrder++;
         msp_babel(MSP_ALTITUDE, 0,0);
+        getstatus();
         break;
       default:
         taskOrder++;
         msp_babel(MSP_SET_RAW_RC, 8,SIGN);
         break;
       }
-      getstatus();
     }
-
 
 #if defined(DEBUG) || defined(MEGA)
     Serial.print(ALTITUDE,DEC);
