@@ -62,7 +62,7 @@ void vario_sound(int16_t vario_beep){
   uint8_t scale=100;
   uint32_t bepdelay=constrain((uint32_t)(1000.0/((vario_beep/500.0)*scale)),100,2500);
   if(SINGNDANCE==0){
-    if(vario_beep >= 10){
+    if(vario_beep >= 5){
       if((GUT-VARIO_BEEP_D) > bepdelay){
       VBON=1;   
       }
@@ -78,7 +78,7 @@ void vario_sound(int16_t vario_beep){
         nota=0;
       }
     } 
-    else if(vario_beep < -10) {
+    else if(vario_beep < -5) {
       nota=constrain((700+vario_beep),200,700);
     }
     else{
