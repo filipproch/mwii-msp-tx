@@ -35,7 +35,7 @@ MWII-MSP-TX by Andrej Javorsek
 #endif
 
 uint16_t MIDR=512, MIDP=512, MIDY=512; 
-uint16_t DB=1500;
+uint16_t DB=2000;
 uint8_t AUXP[]={
   13,12,11,5};
 uint8_t SIG=0;
