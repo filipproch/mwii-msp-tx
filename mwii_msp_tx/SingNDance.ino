@@ -39,6 +39,7 @@ void singndance(uint8_t pip){
     PN=NOTE_F1;
     if ((GUT-TG_SW) > 50){
       PN=0;
+      SINGNDANCE=0;
     }
     break;
 
@@ -92,7 +93,7 @@ void vario_sound(int16_t vario_beep){
   if(nota>0){
     tone(BUZERPIN,nota);
   }
-  else{
+  else if (SINGNDANCE==0 && nota==0){
     noTone(BUZERPIN);
   }
 }
