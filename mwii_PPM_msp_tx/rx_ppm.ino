@@ -8,8 +8,12 @@
     last = now;
     if(diff>3000) chan = 0;
     else {
-      if( 900<diff && diff<2200 && chan<RC_CHANS ) {   //Only if the signal is between these values it is valid, otherwise the failsafe counter should move up
+      if( 900<diff && diff<2200 && chan<RC_CHANS ) {
         rcValue[chan] = diff;
+        PPM_OK=1;
+      }
+      else{
+        PPM_OK=0;
       }
     chan++;
   }
