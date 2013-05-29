@@ -31,6 +31,7 @@ uint8_t SIG=0;
 uint32_t GUT=0 ,T=0, T_LED=0, TG_SW=0, ADP_DELAY=0, VARIO_BEEP_D=0; 
 uint8_t STANJE=0;
 uint16_t PN=0;
+uint8_t PPM_OK=0;
 uint8_t  RC_REFRESH_RATE=(1000/40); //in Hz
 
 uint16_t rcValue[]={1500,1500,1500,1500,1500,1500,1500,1500};
@@ -48,10 +49,10 @@ void setup() {
    pinMode(PC_4,INPUT);
   #else
    pinMode(3,INPUT);
-   digitalWrite(LED_ON_OK,HIGH);
   #endif
   HSER.begin(19200);
   PPM_PIN_INTERRUPT;
+  digitalWrite(LED_ON_OK,HIGH);
 }
 
 void loop() {
@@ -67,7 +68,10 @@ void loop() {
     }
     
     #if !defined(DEBUG)
+    if(PPM_OK){
         msp_babel(MSP_SET_RAW_RC, 8,SIGN);
+        PPM_OK=0;
+    }
     #else
      for (int i=0;i<RC_CHANS;i++){
        HSER.println(rcValue[i]);
