@@ -13,7 +13,7 @@ void msp_babel(uint8_t MSPTYPE, uint8_t ploadsize, uint16_t pload_in[12]){
       tabela[lsb_pl]=pload_in[i] >> 8;
       lsb_pl=lsb_pl+2;
     }
-    
+
     msp_string[0]=ploadsize*2 & 0xff;
     checksum ^= (ploadsize*2 & 0xFF);
     msp_string[1]=MSPTYPE & 0xff;
@@ -32,13 +32,13 @@ void msp_babel(uint8_t MSPTYPE, uint8_t ploadsize, uint16_t pload_in[12]){
     checksum ^= (MSPTYPE & 0xFF);
     msp_string[ploadsize*2+2]= checksum;
   }
-  
-  #if !defined(DEBUG) 
-    HSER.print("$M<"); 
-    for(int u=0;u<(ploadsize*2+3);u++){
-      HSER.write(msp_string[u]);
-    }
+
+#if !defined(DEBUG) 
+  Serial.print("$M<"); 
+  for(int u=0;u<(ploadsize*2+3);u++){
+    Serial.write(msp_string[u]);
+  }
 #endif
-  
 }
+
 
