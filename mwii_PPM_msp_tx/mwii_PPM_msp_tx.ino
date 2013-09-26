@@ -10,22 +10,7 @@ MWII-MSP-TX by Andrej Javorsek
 
 //V2 to use as PPM to MSP converter
 
-//#define DEBUG
-
-//Position of signal in PPM train, differs for TX
-#define  ROLL     0
-#define  PITCH    1
-#define  YAW      2
-#define  THROTTLE 3
-
-#define RC_REFRESH_RATE 40 //in Hz (40 gives good respones)
-#define SERIAL_SPEED 19200
-#define APC_ENABLE_PIN 9    //Enable pin is needed on APC802
-#define PPM_INTERUPT_CHANNEL 1 // on Adru ProMini Channel 1 is on pin 3  http://arduino.cc/en/Reference/AttachInterrupt
-
-#define PPM_PIN_INTERRUPT          attachInterrupt(PPM_INTERUPT_CHANNEL, rxInt, RISING);
-#define RC_CHANS 8
-#define MSP_SET_RAW_RC 200
+#include "def.h"
 
 uint16_t SIGN[8]={
   0,0,0,0};
@@ -41,10 +26,13 @@ void setup() {
   pinMode(3,INPUT);
   Serial.begin(SERIAL_SPEED);
   PPM_PIN_INTERRUPT;
-  digitalWrite(APC_ENABLE_PIN,HIGH); //After setup enable APC module
+  //digitalWrite(APC_ENABLE_PIN,HIGH); //After setup enable APC module
 }
 
 void loop() {
+  #if defined(NO_FAILSAFE)
+  PPM_OK=1;
+  #endif
   if((GUT-T)>RC_REFRESH_DELAY){ 
 
     SIGN[0]=rcValue[PITCH];
