@@ -1,3 +1,13 @@
+/*
+MWII-MSP-RX by Andrej Javorsek
+ Sept 2013
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ any later version. see <http://www.gnu.org/licenses/>
+ */
+/*Code snippets taken directly from MultiWii http://www.multiwii.com */
+
 
 #include "def.h"
 #include <Servo.h>
