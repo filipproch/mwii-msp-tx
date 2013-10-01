@@ -24,19 +24,19 @@ Servo AUX2S;
 int i=1000;
 uint32_t GUT=0, T=0;
 // CH. order ROLL/PITCH/YAW/THROTTLE/AUX1/AUX2/AUX3AUX4
-volatile uint16_t servo_val[]={1500,1500,1500,1000,1500,1500,1500,1500};
+volatile uint16_t servo_val[]={
+  1500,1500,1500,1000,1500,1500,1500,1500};
 
 void setup() {
-  SER1_BEGIN;
-  #if  defined(__AVR_ATmega2560__)
-  SER_DBG_BEGIN;
-  #endif
-         ROLLS.attach(11);  // attaches the servo on pin 11 to the servo object MOSI
-         PITCHS.attach(12); //MISO
-         YAWS.attach(13); //SCK
-         THS.attach(2); //INTERRUPT 0 (servo in)
-         AUX1S.attach(4);
-         AUX2S.attach(5);
+  //setup serial comm.
+ SER_BEGIN
+ //attach servos to pin
+ ROLL_ATTACH  
+ PITCH_ATTACH
+ YAW_ATTACH 
+ TH_ATTACH 
+ AUX1_ATTACH
+ AUX2_ATTACH
 }
 
 void loop(){
@@ -45,3 +45,4 @@ void loop(){
   write_servo();
   T=GUT;
 }
+
